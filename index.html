@@ -96,6 +96,12 @@
         button.edit:hover {
             background-color: #d68910;
         }
+        button.copy {
+            background-color: #9b59b6;
+        }
+        button.copy:hover {
+            background-color: #8e44ad;
+        }
         .controls {
             display: flex;
             gap: 10px;
@@ -206,6 +212,58 @@
         .edit-form .controls {
             margin-top: 10px;
         }
+        .share-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border-radius: 10px;
+            color: white;
+        }
+        .share-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .copy-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2ecc71;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+        }
+        .bank-info {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .bank-info h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .payment-display {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            display: none;
+        }
+        .payment-form {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
         @media (max-width: 768px) {
             .input-group {
                 flex-direction: column;
@@ -225,10 +283,17 @@
             .enter-hint {
                 margin-left: 0;
             }
+            .share-buttons {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="copy-notification" id="copy-notification">
+        ✅ คัดลอกสรุปไปยังคลิปบอร์ดแล้ว!
+    </div>
+
     <div class="container">
         <h1><span class="emoji">🍽️</span> หาร ร่วม มาก</h1>
         
@@ -250,12 +315,12 @@
         <div class="section">
             <h2>เพิ่มอาหาร</h2>
             <div class="input-group">
-                <label for="food-name">ชื่ออาหาร:</label>
-                <input type="text" id="food-name">
+                <label for="food-name">ชื่ออาหาร (ไม่บังคับ):</label>
+                <input type="text" id="food-name" placeholder="เช่น ข้าวผัด, ก๋วยเตี๋ยว">
             </div>
             <div class="input-group">
                 <label for="food-price">ราคา (บาท):</label>
-                <input type="number" id="food-price" min="0" inputmode="numeric" pattern="[0-9]*">
+                <input type="number" id="food-price" min="0" inputmode="numeric" pattern="[0-9]*" placeholder="เช่น 50">
             </div>
             <div class="input-group">
                 <label for="food-person">คนที่สั่ง:</label>
@@ -313,6 +378,63 @@
                 <div class="no-data">ยังไม่ได้เพิ่มค่าส่ง</div>
             </div>
         </div>
+
+        <!-- ส่วนข้อมูลบัญชีธนาคารใหม่ -->
+        <div class="section">
+            <h2>ช่องทางการรับเงิน</h2>
+            <div class="payment-form" id="payment-form">
+                <h4>💳 ตั้งค่าช่องทางการรับเงิน</h4>
+                <div class="input-group">
+                    <label for="payment-type">ประเภท:</label>
+                    <select id="payment-type">
+                        <option value="">-- เลือกช่องทางการรับเงิน --</option>
+                        <option value="promptpay">พร้อมเพย์</option>
+                        <option value="bank">บัญชีธนาคาร</option>
+                    </select>
+                </div>
+                
+                <!-- ฟอร์มพร้อมเพย์ -->
+                <div id="promptpay-form" style="display: none;">
+                    <div class="input-group">
+                        <label for="promptpay-phone">เบอร์โทรศัพท์:</label>
+                        <input type="text" id="promptpay-phone" placeholder="เช่น 0812345678" inputmode="numeric" pattern="[0-9]*">
+                    </div>
+                    <div class="input-group">
+                        <label for="promptpay-name">ชื่อ:</label>
+                        <input type="text" id="promptpay-name" placeholder="ชื่อผู้รับเงิน">
+                    </div>
+                </div>
+                
+                <!-- ฟอร์มบัญชีธนาคาร -->
+                <div id="bank-form" style="display: none;">
+                    <div class="input-group">
+                        <label for="bank-name">ธนาคาร:</label>
+                        <input type="text" id="bank-name" placeholder="เช่น ธนาคารกสิกรไทย">
+                    </div>
+                    <div class="input-group">
+                        <label for="bank-account-name">ชื่อบัญชี:</label>
+                        <input type="text" id="bank-account-name" placeholder="ชื่อผู้ถือบัญชี">
+                    </div>
+                    <div class="input-group">
+                        <label for="bank-account-number">เลขที่บัญชี:</label>
+                        <input type="text" id="bank-account-number" placeholder="เช่น 123-4-56789-0" inputmode="numeric" pattern="[0-9\-]*">
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button id="save-payment-info" class="success">บันทึกข้อมูล</button>
+                </div>
+            </div>
+            
+            <!-- แสดงข้อมูลที่บันทึก -->
+            <div class="payment-display" id="payment-display">
+                <h4>💳 ช่องทางการชำระเงิน</h4>
+                <div id="payment-details"></div>
+                <div class="controls" style="margin-top: 10px;">
+                    <button class="edit" onclick="editPaymentInfo()">แก้ไข</button>
+                </div>
+            </div>
+        </div>
         
         <div class="section">
             <h2>คำนวณ</h2>
@@ -321,6 +443,21 @@
             </div>
             <div class="result" id="result">
                 <div class="no-data">กดปุ่มคำนวณเพื่อดูผลลัพธ์</div>
+            </div>
+
+            <!-- ส่วนแชร์ผลลัพธ์ -->
+            <div class="share-section" id="share-section" style="display: none;">
+                <h3 style="text-align: center; margin-top: 0; color: white;">📤 แชร์ผลลัพธ์</h3>
+                
+                <div class="share-buttons">
+                    <button id="copy-all" class="copy">📋 คัดลอกสรุปทั้งหมด</button>
+                </div>
+
+                <!-- ข้อมูลบัญชีธนาคารที่แสดงในสรุป -->
+                <div class="bank-info" id="summary-payment-info" style="display: none;">
+                    <h4>💳 ช่องทางการชำระเงิน</h4>
+                    <div id="summary-payment-details"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -332,6 +469,13 @@
         let discounts = [];
         let deliveryFee = 0;
         let includeDelivery = false;
+        let currentSummary = '';
+        let personPayments = {};
+        let paymentInfo = {
+            type: '',
+            promptpay: { phone: '', name: '' },
+            bank: { name: '', accountName: '', accountNumber: '' }
+        };
 
         // อ้างอิงถึง DOM elements
         const personNameInput = document.getElementById('person-name');
@@ -356,6 +500,587 @@
         const deliverySection = document.getElementById('delivery-section');
         const calculateBtn = document.getElementById('calculate');
         const resultDiv = document.getElementById('result');
+        const shareSection = document.getElementById('share-section');
+        const copyAllBtn = document.getElementById('copy-all');
+        const copyNotification = document.getElementById('copy-notification');
+
+        // อ้างอิงถึง elements ใหม่สำหรับข้อมูลบัญชี
+        const paymentTypeSelect = document.getElementById('payment-type');
+        const promptpayForm = document.getElementById('promptpay-form');
+        const bankForm = document.getElementById('bank-form');
+        const promptpayPhoneInput = document.getElementById('promptpay-phone');
+        const promptpayNameInput = document.getElementById('promptpay-name');
+        const bankNameInput = document.getElementById('bank-name');
+        const bankAccountNameInput = document.getElementById('bank-account-name');
+        const bankAccountNumberInput = document.getElementById('bank-account-number');
+        const savePaymentInfoBtn = document.getElementById('save-payment-info');
+        const paymentDisplay = document.getElementById('payment-display');
+        const paymentDetails = document.getElementById('payment-details');
+        const paymentForm = document.getElementById('payment-form');
+        const summaryPaymentInfo = document.getElementById('summary-payment-info');
+        const summaryPaymentDetails = document.getElementById('summary-payment-details');
+
+        // จัดการการเปลี่ยนประเภทช่องทางการรับเงิน
+        paymentTypeSelect.addEventListener('change', function() {
+            const type = this.value;
+            promptpayForm.style.display = 'none';
+            bankForm.style.display = 'none';
+            
+            if (type === 'promptpay') {
+                promptpayForm.style.display = 'block';
+            } else if (type === 'bank') {
+                bankForm.style.display = 'block';
+            }
+        });
+
+        // บันทึกข้อมูลช่องทางการรับเงิน (แก้ไขแล้ว)
+function savePaymentInfo() {
+    const type = paymentTypeSelect.value;
+    
+    if (!type) {
+        alert('กรุณาเลือกประเภทช่องทางการรับเงิน');
+        return;
+    }
+    
+    paymentInfo.type = type;
+    
+    if (type === 'promptpay') {
+        const phone = promptpayPhoneInput.value.trim();
+        const name = promptpayNameInput.value.trim();
+        
+        if (!phone || !name) {
+            alert('กรุณากรอกข้อมูลพร้อมเพย์ให้ครบถ้วน');
+            return;
+        }
+        
+        // ตรวจสอบเบอร์โทรศัพท์ก่อนบันทึก
+        if (!validatePhoneBeforeSave(phone)) {
+            return;
+        }
+        
+        paymentInfo.promptpay = { phone, name };
+        
+        // แสดงข้อมูล
+        paymentDetails.innerHTML = `
+            <div><strong>พร้อมเพย์</strong></div>
+            <div>เบอร์โทรศัพท์: ${phone}</div>
+            <div>ชื่อ: ${name}</div>
+        `;
+        
+    } else if (type === 'bank') {
+        const bankName = bankNameInput.value.trim();
+        const accountName = bankAccountNameInput.value.trim();
+        const accountNumber = bankAccountNumberInput.value.trim();
+        
+        if (!bankName || !accountName || !accountNumber) {
+            alert('กรุณากรอกข้อมูลบัญชีธนาคารให้ครบถ้วน');
+            return;
+        }
+        
+        paymentInfo.bank = { name: bankName, accountName, accountNumber };
+        
+        // แสดงข้อมูล
+        paymentDetails.innerHTML = `
+            <div><strong>${bankName}</strong></div>
+            <div>ชื่อบัญชี: ${accountName}</div>
+            <div>เลขที่บัญชี: ${accountNumber}</div>
+        `;
+    }
+    
+    // แสดงส่วนแสดงข้อมูล
+    paymentDisplay.style.display = 'block';
+    paymentForm.style.display = 'none';
+    
+    alert('บันทึกข้อมูลช่องทางการรับเงินเรียบร้อยแล้ว');
+}
+
+        // แก้ไขข้อมูลช่องทางการรับเงิน
+        function editPaymentInfo() {
+            paymentForm.style.display = 'block';
+            paymentDisplay.style.display = 'none';
+            
+            // เติมข้อมูลเดิม
+            paymentTypeSelect.value = paymentInfo.type;
+            
+            if (paymentInfo.type === 'promptpay') {
+                promptpayForm.style.display = 'block';
+                promptpayPhoneInput.value = paymentInfo.promptpay.phone;
+                promptpayNameInput.value = paymentInfo.promptpay.name;
+            } else if (paymentInfo.type === 'bank') {
+                bankForm.style.display = 'block';
+                bankNameInput.value = paymentInfo.bank.name;
+                bankAccountNameInput.value = paymentInfo.bank.accountName;
+                bankAccountNumberInput.value = paymentInfo.bank.accountNumber;
+            }
+        }
+
+        // อัพเดทข้อมูลการชำระเงินในสรุป
+        function updatePaymentSummary() {
+            if (!paymentInfo.type) {
+                summaryPaymentInfo.style.display = 'none';
+                return;
+            }
+            
+            if (paymentInfo.type === 'promptpay') {
+                summaryPaymentDetails.innerHTML = `
+                    <div><strong>พร้อมเพย์</strong></div>
+                    <div>เบอร์โทรศัพท์: ${paymentInfo.promptpay.phone}</div>
+                    <div>ชื่อ: ${paymentInfo.promptpay.name}</div>
+                `;
+            } else if (paymentInfo.type === 'bank') {
+                summaryPaymentDetails.innerHTML = `
+                    <div><strong>${paymentInfo.bank.name}</strong></div>
+                    <div>ชื่อบัญชี: ${paymentInfo.bank.accountName}</div>
+                    <div>เลขที่บัญชี: ${paymentInfo.bank.accountNumber}</div>
+                `;
+            }
+            
+            summaryPaymentInfo.style.display = 'block';
+        }
+
+        // ฟังก์ชันสร้างข้อความสรุปสำหรับแชร์
+        function createShareableSummary() {
+            if (people.length === 0 || foods.length === 0) return '';
+            
+            let summary = '🍽️ *สรุปยอดหารอาหาร* 🍽️\n\n';
+            
+            // รายการอาหาร
+            summary += '*📋 รายการอาหาร:*\n';
+            foods.forEach(food => {
+                const foodName = food.name ? food.name : 'รายการอาหาร';
+                summary += `• ${foodName} - ${food.price.toFixed(2)} บาท (${food.personName})\n`;
+            });
+            
+            const totalBeforeDiscount = foods.reduce((sum, food) => sum + food.price, 0);
+            let totalDiscount = 0;
+            discounts.forEach(discount => {
+                if (discount.type === 'percent') {
+                    totalDiscount += totalBeforeDiscount * (discount.value / 100);
+                } else {
+                    totalDiscount += discount.value;
+                }
+            });
+            
+            if (totalDiscount > totalBeforeDiscount) {
+                totalDiscount = totalBeforeDiscount;
+            }
+            
+            const totalAfterDiscount = totalBeforeDiscount - totalDiscount;
+            const deliveryPerPerson = includeDelivery && deliveryFee > 0 ? deliveryFee / people.length : 0;
+            
+            summary += `\n*💰 ยอดรวมอาหาร:* ${totalBeforeDiscount.toFixed(2)} บาท\n`;
+            
+            if (discounts.length > 0) {
+                summary += `*🎫 ส่วนลดทั้งหมด:* -${totalDiscount.toFixed(2)} บาท\n`;
+            }
+            
+            if (includeDelivery && deliveryFee > 0) {
+                summary += `*🚚 ค่าส่ง:* +${deliveryFee.toFixed(2)} บาท\n`;
+            }
+            
+            summary += `\n*💵 ยอดรวมที่ต้องจ่าย:* ${(totalAfterDiscount + (includeDelivery ? deliveryFee : 0)).toFixed(2)} บาท\n\n`;
+            
+            // รายการแต่ละคน
+            summary += '*🧾 แต่ละคนต้องจ่าย:*\n';
+            
+            Object.keys(personPayments).forEach(personId => {
+                if (!personId.includes('_')) {
+                    const person = people.find(p => p.id === personId);
+                    const payment = personPayments[personId];
+                    const discount = personPayments[personId + '_discount'] || 0;
+                    const beforeDiscount = personPayments[personId + '_before'] || 0;
+                    
+                    summary += `*${person.name}:* ${payment.toFixed(2)} บาท\n`;
+                    summary += `  - อาหาร: ${beforeDiscount.toFixed(2)} บาท\n`;
+                    if (discount > 0) {
+                        summary += `  - ส่วนลด: -${discount.toFixed(2)} บาท\n`;
+                    }
+                    if (deliveryPerPerson > 0) {
+                        summary += `  - ค่าส่ง: +${deliveryPerPerson.toFixed(2)} บาท\n`;
+                    }
+                    summary += '\n';
+                }
+            });
+            
+            // ข้อมูลบัญชีธนาคาร
+            if (paymentInfo.type) {
+                summary += '*💳 ช่องทางการชำระเงิน:*\n';
+                if (paymentInfo.type === 'promptpay') {
+                    summary += 'พร้อมเพย์\n';
+                    summary += `เบอร์โทรศัพท์: ${paymentInfo.promptpay.phone}\n`;
+                    summary += `ชื่อ: ${paymentInfo.promptpay.name}\n`;
+                } else if (paymentInfo.type === 'bank') {
+                    summary += `${paymentInfo.bank.name}\n`;
+                    summary += `ชื่อบัญชี: ${paymentInfo.bank.accountName}\n`;
+                    summary += `เลขที่บัญชี: ${paymentInfo.bank.accountNumber}\n`;
+                }
+                summary += '\n';
+            }
+            
+            summary += 'ขอบคุณที่ใช้บริการค่ะ 🙏';
+            
+            return summary;
+        }
+
+        // ฟังก์ชันคัดลอกสรุป
+        function copySummary() {
+            const summary = createShareableSummary();
+            if (!summary) {
+                alert('กรุณาคำนวณยอดก่อน');
+                return;
+            }
+            
+            navigator.clipboard.writeText(summary).then(() => {
+                copyNotification.style.display = 'block';
+                setTimeout(() => {
+                    copyNotification.style.display = 'none';
+                }, 3000);
+            }).catch(() => {
+                const textArea = document.createElement('textarea');
+                textArea.value = summary;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                copyNotification.style.display = 'block';
+                setTimeout(() => {
+                    copyNotification.style.display = 'none';
+                }, 3000);
+            });
+        }
+
+        // คำนวณยอดที่แต่ละคนต้องจ่าย
+        function calculate() {
+            if (people.length === 0) {
+                resultDiv.innerHTML = '<div class="no-data">กรุณาเพิ่มคนก่อน</div>';
+                shareSection.style.display = 'none';
+                return;
+            }
+            
+            if (foods.length === 0) {
+                resultDiv.innerHTML = '<div class="no-data">กรุณาเพิ่มรายการอาหารก่อน</div>';
+                shareSection.style.display = 'none';
+                return;
+            }
+            
+            // คำนวณยอดรวมทั้งหมดก่อนหักส่วนลด
+            const totalBeforeDiscount = foods.reduce((sum, food) => sum + food.price, 0);
+            
+            // คำนวณส่วนลดทั้งหมด
+            let totalDiscount = 0;
+            discounts.forEach(discount => {
+                if (discount.type === 'percent') {
+                    totalDiscount += totalBeforeDiscount * (discount.value / 100);
+                } else {
+                    totalDiscount += discount.value;
+                }
+            });
+            
+            // ตรวจสอบว่าส่วนลดไม่เกินยอดรวม
+            if (totalDiscount > totalBeforeDiscount) {
+                totalDiscount = totalBeforeDiscount;
+            }
+            
+            // ยอดรวมหลังหักส่วนลด
+            const totalAfterDiscount = totalBeforeDiscount - totalDiscount;
+            
+            // คำนวณยอดรวมของแต่ละคนก่อนหักส่วนลด
+            const personTotals = {};
+            people.forEach(person => {
+                personTotals[person.id] = 0;
+            });
+            
+            foods.forEach(food => {
+                if (personTotals.hasOwnProperty(food.personId)) {
+                    personTotals[food.personId] += food.price;
+                }
+            });
+            
+            // คำนวณสัดส่วนส่วนลดของแต่ละคน
+            const personDiscounts = {};
+            Object.keys(personTotals).forEach(personId => {
+                if (totalBeforeDiscount > 0) {
+                    personDiscounts[personId] = totalDiscount * (personTotals[personId] / totalBeforeDiscount);
+                } else {
+                    personDiscounts[personId] = 0;
+                }
+            });
+            
+            // คำนวณค่าส่งต่อคน (หารเท่าๆกัน)
+            const deliveryPerPerson = includeDelivery && deliveryFee > 0 ? deliveryFee / people.length : 0;
+            
+            // คำนวณยอดที่แต่ละคนต้องจ่าย
+            personPayments = {};
+            Object.keys(personTotals).forEach(personId => {
+                personPayments[personId] = personTotals[personId] - personDiscounts[personId] + deliveryPerPerson;
+                personPayments[personId + '_before'] = personTotals[personId];
+                personPayments[personId + '_discount'] = personDiscounts[personId];
+            });
+            
+            // แสดงผลลัพธ์
+            let resultHTML = `
+                <h3>สรุปยอดที่ต้องจ่าย</h3>
+                <div style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>ยอดรวมอาหารทั้งหมด:</span>
+                        <span>${totalBeforeDiscount.toFixed(2)} บาท</span>
+                    </div>
+            `;
+            
+            // เพิ่มบรรทัดยอดค่าส่ง (แสดงตลอด ไม่ว่าจะมีค่าส่งหรือไม่)
+            if (includeDelivery && deliveryFee > 0) {
+                resultHTML += `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>ยอดค่าส่ง:</span>
+                        <span>+ ${deliveryFee.toFixed(2)} บาท</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>ส่วนลดทั้งหมด:</span>
+                        <span>- ${totalDiscount.toFixed(2)} บาท</span>
+                    </div>
+                `;
+            } else {
+                resultHTML += `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>ยอดค่าส่ง:</span>
+                        <span>+ 0.00 บาท</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>ส่วนลดทั้งหมด:</span>
+                        <span>- ${totalDiscount.toFixed(2)} บาท</span>
+                    </div>
+                `;
+            }
+            
+            resultHTML += `
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px;">
+                        <span>ยอดรวมที่ต้องจ่าย:</span>
+                        <span>${(totalAfterDiscount + (includeDelivery ? deliveryFee : 0)).toFixed(2)} บาท</span>
+                    </div>
+                </div>
+                <h4 style="margin-bottom: 15px;">แต่ละคนต้องจ่าย:</h4>
+            `;
+            
+            Object.keys(personPayments).forEach(personId => {
+                if (!personId.includes('_')) {
+                    const person = people.find(p => p.id === personId);
+                    const payment = personPayments[personId];
+                    const discount = personPayments[personId + '_discount'] || 0;
+                    const beforeDiscount = personPayments[personId + '_before'] || 0;
+                    
+                    resultHTML += `
+                        <div class="person-payment">
+                            <div>
+                                <div><strong>${person.name}</strong></div>
+                                <div style="font-size: 14px; opacity: 0.9;">
+                                    อาหาร: ${beforeDiscount.toFixed(2)} บาท
+                                    ${discount > 0 ? `- ส่วนลด: ${discount.toFixed(2)} บาท` : ''}
+                                    ${deliveryPerPerson > 0 ? `+ ค่าส่ง: ${deliveryPerPerson.toFixed(2)} บาท` : ''}
+                                </div>
+                            </div>
+                            <div style="font-weight: bold; font-size: 18px;">
+                                ${payment.toFixed(2)} บาท
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            resultDiv.innerHTML = resultHTML;
+            
+            // อัพเดทข้อมูลการชำระเงินในสรุป
+            updatePaymentSummary();
+            
+            // แสดงส่วนแชร์
+            shareSection.style.display = 'block';
+            currentSummary = createShareableSummary();
+        }
+
+        // ฟังก์ชันจัดการการกด Enter
+        function handleEnterKey(event, addFunction, focusElement = null) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                addFunction();
+                if (focusElement) {
+                    focusElement.focus();
+                }
+            }
+        }
+
+                // === ฟังก์ชันใหม่ที่เพิ่มเข้ามา ===
+
+// ฟังก์ชันลบอาหารทั้งหมด
+function clearAllFoods() {
+    if (confirm('คุณต้องการลบอาหารทั้งหมด?')) {
+        foods = [];
+        renderFoodList();
+    }
+}
+
+// ฟังก์ชันบังคับใส่เฉพาะตัวเลข
+function allowOnlyNumbers(event) {
+    // อนุญาตเฉพาะ: ตัวเลข (0-9), backspace, delete, tab, escape, enter
+    const allowedKeys = [8, 9, 13, 27, 46]; // backspace, tab, enter, escape, delete
+    const isNumber = (event.key >= '0' && event.key <= '9');
+    
+    // อนุญาตให้กดคีย์ที่อนุญาต หรือกดคีย์ตัวเลข
+    if (allowedKeys.includes(event.keyCode) || isNumber) {
+        return true;
+    }
+    
+    // ไม่อนุญาตคีย์อื่นๆ
+    event.preventDefault();
+    return false;
+}
+
+// ฟังก์ชันบังคับใส่เฉพาะตัวเลขและขีดกลาง (สำหรับเลขที่บัญชี)
+function allowOnlyNumbersAndDash(event) {
+    // อนุญาตเฉพาะ: ตัวเลข (0-9), backspace, delete, tab, escape, enter, ขีดกลาง
+    const allowedKeys = [8, 9, 13, 27, 46, 189, 109]; // backspace, tab, enter, escape, delete, dash
+    const isNumber = (event.key >= '0' && event.key <= '9');
+    const isDash = event.key === '-' || event.keyCode === 189 || event.keyCode === 109;
+    
+    // อนุญาตให้กดคีย์ที่อนุญาต หรือกดคีย์ตัวเลข หรือขีดกลาง
+    if (allowedKeys.includes(event.keyCode) || isNumber || isDash) {
+        return true;
+    }
+    
+    // ไม่อนุญาตคีย์อื่นๆ
+    event.preventDefault();
+    return false;
+}
+
+// ตั้งค่า event listeners สำหรับฟิลด์ตัวเลข (แก้ไขแล้ว)
+function setupNumberInputs() {
+    // บังคับใส่เฉพาะตัวเลขในช่องเบอร์โทรศัพท์
+    promptpayPhoneInput.addEventListener('keydown', allowOnlyNumbers);
+    
+    // ตรวจสอบความยาวเบอร์โทรศัพท์
+    promptpayPhoneInput.addEventListener('input', validatePhoneNumber);
+    
+    // บังคับใส่เฉพาะตัวเลขและขีดกลางในช่องเลขที่บัญชี
+    bankAccountNumberInput.addEventListener('keydown', allowOnlyNumbersAndDash);
+    
+    // ป้องกันการ paste ข้อความที่ไม่ใช่ตัวเลข
+    promptpayPhoneInput.addEventListener('paste', function(event) {
+        const pasteData = event.clipboardData.getData('text').replace(/\D/g, '');
+        if (pasteData.length > 10) {
+            pasteData = pasteData.slice(0, 10);
+        }
+        event.preventDefault();
+        promptpayPhoneInput.value = pasteData;
+        validatePhoneNumber({target: promptpayPhoneInput});
+    });
+    
+    bankAccountNumberInput.addEventListener('paste', function(event) {
+        const pasteData = event.clipboardData.getData('text');
+        if (!/^[\d\-]+$/.test(pasteData)) {
+            event.preventDefault();
+            alert('กรุณาวางเฉพาะตัวเลขและขีดกลางเท่านั้น');
+        }
+    });
+}
+
+// ฟังก์ชันตรวจสอบเบอร์โทรศัพท์ (ต้องมี 10 ตัว)
+function validatePhoneNumber(event) {
+    const input = event.target;
+    let value = input.value.replace(/\D/g, ''); // ลบอักขระที่ไม่ใช่ตัวเลข
+    
+    // จำกัดความยาวไม่เกิน 10 ตัว
+    if (value.length > 10) {
+        value = value.slice(0, 10);
+    }
+    
+    input.value = value;
+    
+    // แสดงข้อความแจ้งเตือนถ้ายังไม่ครบ 10 ตัว
+    const phoneError = document.getElementById('phone-error') || createPhoneErrorElement();
+    if (value.length < 10 && value.length > 0) {
+        phoneError.style.display = 'block';
+        phoneError.textContent = `กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 ตัว (ปัจจุบัน: ${value.length} ตัว)`;
+    } else {
+        phoneError.style.display = 'none';
+    }
+}
+
+// สร้าง element สำหรับแสดงข้อความ error
+function createPhoneErrorElement() {
+    const errorElement = document.createElement('div');
+    errorElement.id = 'phone-error';
+    errorElement.style.color = '#e74c3c';
+    errorElement.style.fontSize = '12px';
+    errorElement.style.marginTop = '5px';
+    errorElement.style.display = 'none';
+    
+    // หาตำแหน่งที่จะแทรก element
+    const phoneInputGroup = promptpayPhoneInput.parentElement;
+    phoneInputGroup.appendChild(errorElement);
+    
+    return errorElement;
+}
+
+// ฟังก์ชันตรวจสอบเบอร์โทรศัพท์ก่อนบันทึก
+function validatePhoneBeforeSave(phone) {
+    if (phone.length !== 10) {
+        alert('กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 ตัว');
+        promptpayPhoneInput.focus();
+        return false;
+    }
+    return true;
+}
+
+        // ตั้งค่า event listeners สำหรับฟอร์มช่องทางการรับเงิน
+        function setupPaymentFormEnterKey() {
+            // ฟิลด์ในฟอร์มพร้อมเพย์
+            promptpayPhoneInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    promptpayNameInput.focus();
+                }
+            });
+            
+            promptpayNameInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    savePaymentInfo();
+                }
+            });
+            
+            // ฟิลด์ในฟอร์มบัญชีธนาคาร
+            bankNameInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    bankAccountNameInput.focus();
+                }
+            });
+            
+            bankAccountNameInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    bankAccountNumberInput.focus();
+                }
+            });
+            
+            bankAccountNumberInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    savePaymentInfo();
+                }
+            });
+            
+            // Dropdown ประเภทการชำระเงิน
+            paymentTypeSelect.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    if (paymentTypeSelect.value === 'promptpay') {
+                        promptpayPhoneInput.focus();
+                    } else if (paymentTypeSelect.value === 'bank') {
+                        bankNameInput.focus();
+                    }
+                }
+            });
+        }
 
         // เพิ่มคน
         function addPerson() {
@@ -427,22 +1152,26 @@
             });
         }
 
-        // เพิ่มอาหาร
+        // เพิ่มอาหาร (แก้ไขแล้ว - ไม่บังคับชื่ออาหาร)
         function addFood() {
             const name = foodNameInput.value.trim();
             const price = parseFloat(foodPriceInput.value);
             const personId = foodPersonSelect.value;
             
-            if (!name || isNaN(price) || price <= 0 || !personId) {
-                alert('กรุณากรอกข้อมูลอาหารให้ครบถ้วน');
+            // ตรวจสอบเฉพาะฟิลด์ที่จำเป็น
+            if (isNaN(price) || price <= 0 || !personId) {
+                alert('กรุณากรอกราคาและเลือกคนที่สั่ง');
                 return;
             }
             
             const person = people.find(p => p.id === personId);
             
+            // ถ้าไม่ได้กรอกชื่ออาหาร ให้ใช้ชื่อเริ่มต้น
+            const foodName = name || `รายการอาหาร ${foods.length + 1}`;
+            
             foods.push({ 
                 id: Date.now().toString(),
-                name, 
+                name: foodName, 
                 price,
                 personId,
                 personName: person.name
@@ -461,83 +1190,6 @@
             renderFoodList();
         }
 
-        // แก้ไขอาหาร
-        function editFood(id) {
-            const food = foods.find(f => f.id === id);
-            if (!food) return;
-            
-            const foodItem = document.querySelector(`.food-item[data-id="${id}"]`);
-            if (!foodItem) return;
-            
-            // ซ่อนข้อมูลปกติ
-            foodItem.querySelector('.food-info').style.display = 'none';
-            
-            // แสดงฟอร์มแก้ไข
-            const editForm = foodItem.querySelector('.edit-form');
-            editForm.style.display = 'block';
-            
-            // เติมข้อมูลในฟอร์ม
-            editForm.querySelector('.edit-food-name').value = food.name;
-            editForm.querySelector('.edit-food-price').value = food.price;
-            
-            // อัพเดท dropdown คนที่สั่ง
-            const personSelect = editForm.querySelector('.edit-food-person');
-            personSelect.innerHTML = '';
-            people.forEach(person => {
-                const option = document.createElement('option');
-                option.value = person.id;
-                option.textContent = person.name;
-                if (person.id === food.personId) {
-                    option.selected = true;
-                }
-                personSelect.appendChild(option);
-            });
-        }
-
-        // บันทึกการแก้ไขอาหาร
-        function saveFood(id) {
-            const food = foods.find(f => f.id === id);
-            if (!food) return;
-            
-            const foodItem = document.querySelector(`.food-item[data-id="${id}"]`);
-            if (!foodItem) return;
-            
-            const editForm = foodItem.querySelector('.edit-form');
-            const name = editForm.querySelector('.edit-food-name').value.trim();
-            const price = parseFloat(editForm.querySelector('.edit-food-price').value);
-            const personId = editForm.querySelector('.edit-food-person').value;
-            
-            if (!name || isNaN(price) || price <= 0 || !personId) {
-                alert('กรุณากรอกข้อมูลอาหารให้ครบถ้วนและถูกต้อง');
-                return;
-            }
-            
-            const person = people.find(p => p.id === personId);
-            
-            // อัพเดทข้อมูล
-            food.name = name;
-            food.price = price;
-            food.personId = personId;
-            food.personName = person.name;
-            
-            // ซ่อนฟอร์มแก้ไขและแสดงข้อมูลปกติ
-            editForm.style.display = 'none';
-            foodItem.querySelector('.food-info').style.display = 'block';
-            
-            // อัพเดทการแสดงผล
-            renderFoodList();
-        }
-
-        // ยกเลิกการแก้ไขอาหาร
-        function cancelEditFood(id) {
-            const foodItem = document.querySelector(`.food-item[data-id="${id}"]`);
-            if (!foodItem) return;
-            
-            // ซ่อนฟอร์มแก้ไขและแสดงข้อมูลปกติ
-            foodItem.querySelector('.edit-form').style.display = 'none';
-            foodItem.querySelector('.food-info').style.display = 'block';
-        }
-
         // แสดงรายการอาหาร
         function renderFoodList() {
             foodList.innerHTML = '';
@@ -552,37 +1204,15 @@
             foods.forEach(food => {
                 const foodItem = document.createElement('div');
                 foodItem.className = 'food-item';
-                foodItem.setAttribute('data-id', food.id);
                 foodItem.innerHTML = `
-                    <div class="food-info">
-                        <div>
-                            <div><strong>${food.name}</strong></div>
-                            <div style="font-size: 14px; color: #7f8c8d;">สั่งโดย: ${food.personName}</div>
-                        </div>
-                        <div style="text-align: left;">
-                            <div>${food.price.toFixed(2)} บาท</div>
-                            <div class="controls" style="margin-top: 5px; justify-content: flex-end;">
-                                <button class="edit" onclick="editFood('${food.id}')">แก้ไข</button>
-                                <button class="remove" onclick="removeFood('${food.id}')">ลบ</button>
-                            </div>
-                        </div>
+                    <div>
+                        <div><strong>${food.name}</strong></div>
+                        <div style="font-size: 14px; color: #7f8c8d;">สั่งโดย: ${food.personName}</div>
                     </div>
-                    <div class="edit-form">
-                        <div class="input-group">
-                            <label for="edit-food-name-${food.id}">ชื่ออาหาร:</label>
-                            <input type="text" class="edit-food-name" id="edit-food-name-${food.id}" value="${food.name}">
-                        </div>
-                        <div class="input-group">
-                            <label for="edit-food-price-${food.id}">ราคา (บาท):</label>
-                            <input type="number" class="edit-food-price" id="edit-food-price-${food.id}" value="${food.price}" min="0" inputmode="numeric" pattern="[0-9]*">
-                        </div>
-                        <div class="input-group">
-                            <label for="edit-food-person-${food.id}">คนที่สั่ง:</label>
-                            <select class="edit-food-person" id="edit-food-person-${food.id}"></select>
-                        </div>
-                        <div class="controls">
-                            <button class="success" onclick="saveFood('${food.id}')">บันทึก</button>
-                            <button class="remove" onclick="cancelEditFood('${food.id}')">ยกเลิก</button>
+                    <div style="text-align: left;">
+                        <div>${food.price.toFixed(2)} บาท</div>
+                        <div class="controls" style="margin-top: 5px; justify-content: flex-end;">
+                            <button class="remove" onclick="removeFood('${food.id}')">ลบ</button>
                         </div>
                     </div>
                 `;
@@ -630,65 +1260,6 @@
             renderDiscountList();
         }
 
-        // แก้ไขส่วนลด
-        function editDiscount(id) {
-            const discount = discounts.find(d => d.id === id);
-            if (!discount) return;
-            
-            const discountItem = document.querySelector(`.discount-item[data-id="${id}"]`);
-            if (!discountItem) return;
-            
-            // ซ่อนข้อมูลปกติ
-            discountItem.querySelector('.discount-info').style.display = 'none';
-            
-            // แสดงฟอร์มแก้ไข
-            const editForm = discountItem.querySelector('.edit-form');
-            editForm.style.display = 'block';
-            
-            // เติมข้อมูลในฟอร์ม
-            editForm.querySelector('.edit-discount-type').value = discount.type;
-            editForm.querySelector('.edit-discount-value').value = discount.value;
-        }
-
-        // บันทึกการแก้ไขส่วนลด
-        function saveDiscount(id) {
-            const discount = discounts.find(d => d.id === id);
-            if (!discount) return;
-            
-            const discountItem = document.querySelector(`.discount-item[data-id="${id}"]`);
-            if (!discountItem) return;
-            
-            const editForm = discountItem.querySelector('.edit-form');
-            const type = editForm.querySelector('.edit-discount-type').value;
-            const value = parseFloat(editForm.querySelector('.edit-discount-value').value);
-            
-            if (isNaN(value) || value <= 0) {
-                alert('กรุณากรอกมูลค่าส่วนลดที่ถูกต้อง');
-                return;
-            }
-            
-            // อัพเดทข้อมูล
-            discount.type = type;
-            discount.value = value;
-            
-            // ซ่อนฟอร์มแก้ไขและแสดงข้อมูลปกติ
-            editForm.style.display = 'none';
-            discountItem.querySelector('.discount-info').style.display = 'block';
-            
-            // อัพเดทการแสดงผล
-            renderDiscountList();
-        }
-
-        // ยกเลิกการแก้ไขส่วนลด
-        function cancelEditDiscount(id) {
-            const discountItem = document.querySelector(`.discount-item[data-id="${id}"]`);
-            if (!discountItem) return;
-            
-            // ซ่อนฟอร์มแก้ไขและแสดงข้อมูลปกติ
-            discountItem.querySelector('.edit-form').style.display = 'none';
-            discountItem.querySelector('.discount-info').style.display = 'block';
-        }
-
         // แสดงรายการส่วนลด
         function renderDiscountList() {
             discountList.innerHTML = '';
@@ -701,35 +1272,14 @@
             discounts.forEach(discount => {
                 const discountItem = document.createElement('div');
                 discountItem.className = 'discount-item';
-                discountItem.setAttribute('data-id', discount.id);
                 const discountText = discount.type === 'percent' 
                     ? `${discount.value}%` 
                     : `${discount.value.toFixed(2)} บาท`;
                     
                 discountItem.innerHTML = `
-                    <div class="discount-info">
-                        <span>ส่วนลด: ${discountText}</span>
-                        <div class="controls">
-                            <button class="edit" onclick="editDiscount('${discount.id}')">แก้ไข</button>
-                            <button class="remove" onclick="removeDiscount('${discount.id}')">ลบ</button>
-                        </div>
-                    </div>
-                    <div class="edit-form">
-                        <div class="input-group">
-                            <label for="edit-discount-type-${discount.id}">ประเภทส่วนลด:</label>
-                            <select class="edit-discount-type" id="edit-discount-type-${discount.id}">
-                                <option value="fixed" ${discount.type === 'fixed' ? 'selected' : ''}>จำนวนเงิน (บาท)</option>
-                                <option value="percent" ${discount.type === 'percent' ? 'selected' : ''}>เปอร์เซ็นต์ (%)</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label for="edit-discount-value-${discount.id}">มูลค่าส่วนลด:</label>
-                            <input type="number" class="edit-discount-value" id="edit-discount-value-${discount.id}" value="${discount.value}" min="0" inputmode="numeric" pattern="[0-9]*">
-                        </div>
-                        <div class="controls">
-                            <button class="success" onclick="saveDiscount('${discount.id}')">บันทึก</button>
-                            <button class="remove" onclick="cancelEditDiscount('${discount.id}')">ยกเลิก</button>
-                        </div>
+                    <span>ส่วนลด: ${discountText}</span>
+                    <div class="controls">
+                        <button class="remove" onclick="removeDiscount('${discount.id}')">ลบ</button>
                     </div>
                 `;
                 discountList.appendChild(discountItem);
@@ -768,25 +1318,13 @@
             includeDeliveryCheckbox.checked = true;
         }
 
-        // แก้ไขค่าส่ง
-        function editDelivery() {
-            deliveryFeeInput.value = deliveryFee;
-            deliveryInput.style.display = 'block';
-            deliveryFeeInput.focus();
-        }
-
-        // บันทึกการแก้ไขค่าส่ง
-        function saveDelivery() {
-            const fee = parseFloat(deliveryFeeInput.value);
-            
-            if (isNaN(fee) || fee <= 0) {
-                alert('กรุณากรอกค่าส่งที่ถูกต้อง');
-                return;
-            }
-            
-            deliveryFee = fee;
-            renderDeliverySection();
+        // ลบค่าส่ง
+        function removeDelivery() {
+            deliveryFee = 0;
+            includeDeliveryCheckbox.checked = false;
+            includeDelivery = false;
             deliveryInput.style.display = 'none';
+            renderDeliverySection();
         }
 
         // แสดงข้อมูลค่าส่ง
@@ -801,172 +1339,15 @@
             const deliveryItem = document.createElement('div');
             deliveryItem.className = 'delivery-item';
             deliveryItem.innerHTML = `
-            <div>
                 <span>ค่าส่งทั้งหมด</span>
-                <div class="controls">
+                <div>
                     <span>${deliveryFee.toFixed(2)} บาท</span>
-                </div>    
-                <div class="controls" style="margin-top: 5px; justify-content: flex-end;">
-                    <button class="edit" onclick="editDelivery()" >แก้ไข</button>
-                    <button class="remove" onclick="removeDelivery()" >ลบ</button>
+                    <div class="controls" style="margin-top: 5px; justify-content: flex-end;">
+                        <button class="remove" onclick="removeDelivery()">ลบ</button>
+                    </div>
                 </div>
-            </div>
             `;
             deliverySection.appendChild(deliveryItem);
-        }
-
-        // ลบค่าส่ง
-        function removeDelivery() {
-            deliveryFee = 0;
-            includeDeliveryCheckbox.checked = false;
-            includeDelivery = false;
-            deliveryInput.style.display = 'none';
-            renderDeliverySection();
-        }
-
-        // คำนวณยอดที่แต่ละคนต้องจ่าย
-        function calculate() {
-            if (people.length === 0) {
-                resultDiv.innerHTML = '<div class="no-data">กรุณาเพิ่มคนก่อน</div>';
-                return;
-            }
-            
-            if (foods.length === 0) {
-                resultDiv.innerHTML = '<div class="no-data">กรุณาเพิ่มรายการอาหารก่อน</div>';
-                return;
-            }
-            
-            // คำนวณยอดรวมทั้งหมดก่อนหักส่วนลด
-            const totalBeforeDiscount = foods.reduce((sum, food) => sum + food.price, 0);
-            
-            // คำนวณส่วนลดทั้งหมด
-            let totalDiscount = 0;
-            discounts.forEach(discount => {
-                if (discount.type === 'percent') {
-                    totalDiscount += totalBeforeDiscount * (discount.value / 100);
-                } else {
-                    totalDiscount += discount.value;
-                }
-            });
-            
-            // ตรวจสอบว่าส่วนลดไม่เกินยอดรวม
-            if (totalDiscount > totalBeforeDiscount) {
-                totalDiscount = totalBeforeDiscount;
-            }
-            
-            // ยอดรวมหลังหักส่วนลด
-            const totalAfterDiscount = totalBeforeDiscount - totalDiscount;
-            
-            // คำนวณยอดรวมของแต่ละคนก่อนหักส่วนลด
-            const personTotals = {};
-            people.forEach(person => {
-                personTotals[person.id] = 0;
-            });
-            
-            foods.forEach(food => {
-                if (personTotals.hasOwnProperty(food.personId)) {
-                    personTotals[food.personId] += food.price; // แก้ไขเป็น food.personId
-                }
-            });
-            
-            // คำนวณสัดส่วนส่วนลดของแต่ละคน
-            const personDiscounts = {};
-            Object.keys(personTotals).forEach(personId => {
-                if (totalBeforeDiscount > 0) {
-                    personDiscounts[personId] = totalDiscount * (personTotals[personId] / totalBeforeDiscount);
-                } else {
-                    personDiscounts[personId] = 0;
-                }
-            });
-            
-            // คำนวณค่าส่งต่อคน (หารเท่าๆกัน)
-            const deliveryPerPerson = includeDelivery && deliveryFee > 0 ? deliveryFee / people.length : 0;
-            
-            // คำนวณยอดที่แต่ละคนต้องจ่าย
-            const personPayments = {};
-            Object.keys(personTotals).forEach(personId => {
-                personPayments[personId] = personTotals[personId] - personDiscounts[personId] + deliveryPerPerson;
-            });
-            
-            // แสดงผลลัพธ์
-            let resultHTML = `
-                <h3>สรุปยอดที่ต้องจ่าย</h3>
-                <div style="margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span>ยอดรวมอาหารทั้งหมด:</span>
-                        <span>${totalBeforeDiscount.toFixed(2)} บาท</span>
-                    </div>
-            `;
-            
-            // เพิ่มบรรทัดยอดค่าส่ง (แสดงตลอด ไม่ว่าจะมีค่าส่งหรือไม่)
-            if (includeDelivery && deliveryFee > 0) {
-                resultHTML += `
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span>ยอดค่าส่ง:</span>
-                        <span>+ ${deliveryFee.toFixed(2)} บาท</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span>ส่วนลดทั้งหมด:</span>
-                        <span>- ${totalDiscount.toFixed(2)} บาท</span>
-                    </div>
-                `;
-            } else {
-                resultHTML += `
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span>ยอดค่าส่ง:</span>
-                        <span>+ 0.00 บาท</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span>ส่วนลดทั้งหมด:</span>
-                        <span>- ${totalDiscount.toFixed(2)} บาท</span>
-                    </div>
-                `;
-            }
-            
-            resultHTML += `
-                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px;">
-                        <span>ยอดรวมที่ต้องจ่าย:</span>
-                        <span>${(totalAfterDiscount + (includeDelivery ? deliveryFee : 0)).toFixed(2)} บาท</span>
-                    </div>
-                </div>
-                <h4 style="margin-bottom: 15px;">แต่ละคนต้องจ่าย:</h4>
-            `;
-            
-            Object.keys(personPayments).forEach(personId => {
-                const person = people.find(p => p.id === personId);
-                const payment = personPayments[personId];
-                const discount = personDiscounts[personId];
-                const beforeDiscount = personTotals[personId];
-                
-                resultHTML += `
-                    <div class="person-payment">
-                        <div>
-                            <div><strong>${person.name}</strong></div>
-                            <div style="font-size: 14px; opacity: 0.9;">
-                                อาหาร: ${beforeDiscount.toFixed(2)} บาท
-                                ${discount > 0 ? `- ส่วนลด: ${discount.toFixed(2)} บาท` : ''}
-                                ${deliveryPerPerson > 0 ? `+ ค่าส่ง: ${deliveryPerPerson.toFixed(2)} บาท` : ''}
-                            </div>
-                        </div>
-                        <div style="font-weight: bold; font-size: 18px;">
-                            ${payment.toFixed(2)} บาท
-                        </div>
-                    </div>
-                `;
-            });
-            
-            resultDiv.innerHTML = resultHTML;
-        }
-
-        // ฟังก์ชันจัดการการกด Enter
-        function handleEnterKey(event, addFunction, focusElement = null) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                addFunction();
-                if (focusElement) {
-                    focusElement.focus();
-                }
-            }
         }
 
         // ตั้งค่า event listeners
@@ -1000,13 +1381,6 @@
             }
         });
         
-        clearFoodsBtn.addEventListener('click', () => {
-            if (confirm('คุณต้องการลบอาหารทั้งหมด?')) {
-                foods = [];
-                renderFoodList();
-            }
-        });
-        
         addDiscountBtn.addEventListener('click', addDiscount);
         discountValueInput.addEventListener('keydown', (event) => {
             handleEnterKey(event, addDiscount, discountValueInput);
@@ -1036,7 +1410,13 @@
             }
         });
         
+        // Event listeners สำหรับข้อมูลบัญชี
+        savePaymentInfoBtn.addEventListener('click', savePaymentInfo);
+        
         calculateBtn.addEventListener('click', calculate);
+        
+        // Event listeners สำหรับการแชร์
+        copyAllBtn.addEventListener('click', copySummary);
         
         // ตั้งค่าเริ่มต้น
         renderPeopleList();
@@ -1044,6 +1424,13 @@
         renderDiscountList();
         renderDeliverySection();
         updateFoodPersonSelect();
+
+        // Event listeners สำหรับลบอาหารทั้งหมด
+        clearFoodsBtn.addEventListener('click', clearAllFoods);
+        
+        // ตั้งค่า event listeners สำหรับฟอร์มช่องทางการรับเงิน
+        setupPaymentFormEnterKey();
+        setupNumberInputs();
     </script>
 </body>
 </html>
