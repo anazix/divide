@@ -90,6 +90,12 @@
         button.success:hover {
             background-color: #27ae60;
         }
+        button.edit {
+            background-color: #f39c12;
+        }
+        button.edit:hover {
+            background-color: #d68910;
+        }
         .controls {
             display: flex;
             gap: 10px;
@@ -181,6 +187,20 @@
             border-radius: 8px;
             border-left: 4px solid #ffc107;
         }
+        .edit-form {
+            display: none;
+            margin-top: 10px;
+            padding: 15px;
+            background-color: #e8f4fc;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        .edit-form .input-group {
+            margin-bottom: 10px;
+        }
+        .edit-form .controls {
+            margin-top: 10px;
+        }
         @media (max-width: 768px) {
             .input-group {
                 flex-direction: column;
@@ -230,7 +250,7 @@
             </div>
             <div class="input-group">
                 <label for="food-price">ราคา (บาท):</label>
-                <input type="number" id="food-price" min="0">
+                <input type="number" id="food-price" min="0" inputmode="numeric" pattern="[0-9]*">
             </div>
             <div class="input-group">
                 <label for="food-person">คนที่สั่ง:</label>
@@ -258,7 +278,7 @@
             </div>
             <div class="input-group">
                 <label for="discount-value">มูลค่าส่วนลด:</label>
-                <input type="number" id="discount-value" min="0">
+                <input type="number" id="discount-value" min="0" inputmode="numeric" pattern="[0-9]*">
             </div>
             <div class="controls">
                 <button id="add-discount">เพิ่มส่วนลด</button>
@@ -278,7 +298,7 @@
             <div class="delivery-input" id="delivery-input">
                 <div class="input-group">
                     <label for="delivery-fee">ค่าส่ง (บาท):</label>
-                    <input type="number" id="delivery-fee" min="0" placeholder="เช่น 20">
+                    <input type="number" id="delivery-fee" min="0" placeholder="เช่น 20" inputmode="numeric" pattern="[0-9]*">
                 </div>
             </div>
             <div class="delivery-section" id="delivery-section">
@@ -432,6 +452,83 @@
             renderFoodList();
         }
 
+        // แก้ไขอาหาร
+        function editFood(id) {
+            const food = foods.find(f => f.id === id);
+            if (!food) return;
+            
+            const foodItem = document.querySelector(`.food-item[data-id="${id}"]`);
+            if (!foodItem) return;
+            
+            // ซ่อนข้อมูลปกติ
+            foodItem.querySelector('.food-info').style.display = 'none';
+            
+            // แสดงฟอร์มแก้ไข
+            const editForm = foodItem.querySelector('.edit-form');
+            editForm.style.display = 'block';
+            
+            // เติมข้อมูลในฟอร์ม
+            editForm.querySelector('.edit-food-name').value = food.name;
+            editForm.querySelector('.edit-food-price').value = food.price;
+            
+            // อัพเดท dropdown คนที่สั่ง
+            const personSelect = editForm.querySelector('.edit-food-person');
+            personSelect.innerHTML = '';
+            people.forEach(person => {
+                const option = document.createElement('option');
+                option.value = person.id;
+                option.textContent = person.name;
+                if (person.id === food.personId) {
+                    option.selected = true;
+                }
+                personSelect.appendChild(option);
+            });
+        }
+
+        // บันทึกการแก้ไขอาหาร
+        function saveFood(id) {
+            const food = foods.find(f => f.id === id);
+            if (!food) return;
+            
+            const foodItem = document.querySelector(`.food-item[data-id="${id}"]`);
+            if (!foodItem) return;
+            
+            const editForm = foodItem.querySelector('.edit-form');
+            const name = editForm.querySelector('.edit-food-name').value.trim();
+            const price = parseFloat(editForm.querySelector('.edit-food-price').value);
+            const personId = editForm.querySelector('.edit-food-person').value;
+            
+            if (!name || isNaN(price) || price <= 0 || !personId) {
+                alert('กรุณากรอกข้อมูลอาหารให้ครบถ้วนและถูกต้อง');
+                return;
+            }
+            
+            const person = people.find(p => p.id === personId);
+            
+            // อัพเดทข้อมูล
+            food.name = name;
+            food.price = price;
+            food.personId = personId;
+            food.personName = person.name;
+            
+            // ซ่อนฟอร์มแก้ไขและแสดงข้อมูลปกติ
+            editForm.style.display = 'none';
+            foodItem.querySelector('.food-info').style.display = 'block';
+            
+            // อัพเดทการแสดงผล
+            renderFoodList();
+        }
+
+        // ยกเลิกการแก้ไขอาหาร
+        function cancelEditFood(id) {
+            const foodItem = document.querySelector(`.food-item[data-id="${id}"]`);
+            if (!foodItem) return;
+            
+            // ซ่อนฟอร์มแก้ไขและแสดงข้อมูลปกติ
+            foodItem.querySelector('.edit-form').style.display = 'none';
+            foodItem.querySelector('.food-info').style.display = 'block';
+        }
+
         // แสดงรายการอาหาร
         function renderFoodList() {
             foodList.innerHTML = '';
@@ -446,14 +543,38 @@
             foods.forEach(food => {
                 const foodItem = document.createElement('div');
                 foodItem.className = 'food-item';
+                foodItem.setAttribute('data-id', food.id);
                 foodItem.innerHTML = `
-                    <div>
-                        <div><strong>${food.name}</strong></div>
-                        <div style="font-size: 14px; color: #7f8c8d;">สั่งโดย: ${food.personName}</div>
+                    <div class="food-info">
+                        <div>
+                            <div><strong>${food.name}</strong></div>
+                            <div style="font-size: 14px; color: #7f8c8d;">สั่งโดย: ${food.personName}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div>${food.price.toFixed(2)} บาท</div>
+                            <div class="controls" style="margin-top: 5px; justify-content: flex-end;">
+                                <button class="edit" onclick="editFood('${food.id}')">แก้ไข</button>
+                                <button class="remove" onclick="removeFood('${food.id}')">ลบ</button>
+                            </div>
+                        </div>
                     </div>
-                    <div style="text-align: right;">
-                        <div>${food.price.toFixed(2)} บาท</div>
-                        <button class="remove" onclick="removeFood('${food.id}')" style="margin-top: 5px;">ลบ</button>
+                    <div class="edit-form">
+                        <div class="input-group">
+                            <label for="edit-food-name-${food.id}">ชื่ออาหาร:</label>
+                            <input type="text" class="edit-food-name" id="edit-food-name-${food.id}" value="${food.name}">
+                        </div>
+                        <div class="input-group">
+                            <label for="edit-food-price-${food.id}">ราคา (บาท):</label>
+                            <input type="number" class="edit-food-price" id="edit-food-price-${food.id}" value="${food.price}" min="0" inputmode="numeric" pattern="[0-9]*">
+                        </div>
+                        <div class="input-group">
+                            <label for="edit-food-person-${food.id}">คนที่สั่ง:</label>
+                            <select class="edit-food-person" id="edit-food-person-${food.id}"></select>
+                        </div>
+                        <div class="controls">
+                            <button class="success" onclick="saveFood('${food.id}')">บันทึก</button>
+                            <button class="remove" onclick="cancelEditFood('${food.id}')">ยกเลิก</button>
+                        </div>
                     </div>
                 `;
                 foodList.appendChild(foodItem);
@@ -500,6 +621,65 @@
             renderDiscountList();
         }
 
+        // แก้ไขส่วนลด
+        function editDiscount(id) {
+            const discount = discounts.find(d => d.id === id);
+            if (!discount) return;
+            
+            const discountItem = document.querySelector(`.discount-item[data-id="${id}"]`);
+            if (!discountItem) return;
+            
+            // ซ่อนข้อมูลปกติ
+            discountItem.querySelector('.discount-info').style.display = 'none';
+            
+            // แสดงฟอร์มแก้ไข
+            const editForm = discountItem.querySelector('.edit-form');
+            editForm.style.display = 'block';
+            
+            // เติมข้อมูลในฟอร์ม
+            editForm.querySelector('.edit-discount-type').value = discount.type;
+            editForm.querySelector('.edit-discount-value').value = discount.value;
+        }
+
+        // บันทึกการแก้ไขส่วนลด
+        function saveDiscount(id) {
+            const discount = discounts.find(d => d.id === id);
+            if (!discount) return;
+            
+            const discountItem = document.querySelector(`.discount-item[data-id="${id}"]`);
+            if (!discountItem) return;
+            
+            const editForm = discountItem.querySelector('.edit-form');
+            const type = editForm.querySelector('.edit-discount-type').value;
+            const value = parseFloat(editForm.querySelector('.edit-discount-value').value);
+            
+            if (isNaN(value) || value <= 0) {
+                alert('กรุณากรอกมูลค่าส่วนลดที่ถูกต้อง');
+                return;
+            }
+            
+            // อัพเดทข้อมูล
+            discount.type = type;
+            discount.value = value;
+            
+            // ซ่อนฟอร์มแก้ไขและแสดงข้อมูลปกติ
+            editForm.style.display = 'none';
+            discountItem.querySelector('.discount-info').style.display = 'block';
+            
+            // อัพเดทการแสดงผล
+            renderDiscountList();
+        }
+
+        // ยกเลิกการแก้ไขส่วนลด
+        function cancelEditDiscount(id) {
+            const discountItem = document.querySelector(`.discount-item[data-id="${id}"]`);
+            if (!discountItem) return;
+            
+            // ซ่อนฟอร์มแก้ไขและแสดงข้อมูลปกติ
+            discountItem.querySelector('.edit-form').style.display = 'none';
+            discountItem.querySelector('.discount-info').style.display = 'block';
+        }
+
         // แสดงรายการส่วนลด
         function renderDiscountList() {
             discountList.innerHTML = '';
@@ -512,13 +692,36 @@
             discounts.forEach(discount => {
                 const discountItem = document.createElement('div');
                 discountItem.className = 'discount-item';
+                discountItem.setAttribute('data-id', discount.id);
                 const discountText = discount.type === 'percent' 
                     ? `${discount.value}%` 
                     : `${discount.value.toFixed(2)} บาท`;
                     
                 discountItem.innerHTML = `
-                    <span>ส่วนลด: ${discountText}</span>
-                    <button class="remove" onclick="removeDiscount('${discount.id}')">ลบ</button>
+                    <div class="discount-info">
+                        <span>ส่วนลด: ${discountText}</span>
+                        <div class="controls">
+                            <button class="edit" onclick="editDiscount('${discount.id}')">แก้ไข</button>
+                            <button class="remove" onclick="removeDiscount('${discount.id}')">ลบ</button>
+                        </div>
+                    </div>
+                    <div class="edit-form">
+                        <div class="input-group">
+                            <label for="edit-discount-type-${discount.id}">ประเภทส่วนลด:</label>
+                            <select class="edit-discount-type" id="edit-discount-type-${discount.id}">
+                                <option value="fixed" ${discount.type === 'fixed' ? 'selected' : ''}>จำนวนเงิน (บาท)</option>
+                                <option value="percent" ${discount.type === 'percent' ? 'selected' : ''}>เปอร์เซ็นต์ (%)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="edit-discount-value-${discount.id}">มูลค่าส่วนลด:</label>
+                            <input type="number" class="edit-discount-value" id="edit-discount-value-${discount.id}" value="${discount.value}" min="0" inputmode="numeric" pattern="[0-9]*">
+                        </div>
+                        <div class="controls">
+                            <button class="success" onclick="saveDiscount('${discount.id}')">บันทึก</button>
+                            <button class="remove" onclick="cancelEditDiscount('${discount.id}')">ยกเลิก</button>
+                        </div>
+                    </div>
                 `;
                 discountList.appendChild(discountItem);
             });
@@ -552,6 +755,27 @@
             deliveryFeeInput.value = '';
         }
 
+        // แก้ไขค่าส่ง
+        function editDelivery() {
+            deliveryFeeInput.value = deliveryFee;
+            deliveryInput.style.display = 'block';
+            deliveryFeeInput.focus();
+        }
+
+        // บันทึกการแก้ไขค่าส่ง
+        function saveDelivery() {
+            const fee = parseFloat(deliveryFeeInput.value);
+            
+            if (isNaN(fee) || fee <= 0) {
+                alert('กรุณากรอกค่าส่งที่ถูกต้อง');
+                return;
+            }
+            
+            deliveryFee = fee;
+            renderDeliverySection();
+            deliveryInput.style.display = 'none';
+        }
+
         // แสดงข้อมูลค่าส่ง
         function renderDeliverySection() {
             deliverySection.innerHTML = '';
@@ -567,6 +791,7 @@
                 <span>ค่าส่งทั้งหมด</span>
                 <div>
                     <span>${deliveryFee.toFixed(2)} บาท</span>
+                    <button class="edit" onclick="editDelivery()" style="margin-left: 10px;">แก้ไข</button>
                     <button class="remove" onclick="removeDelivery()" style="margin-left: 10px;">ลบ</button>
                 </div>
             `;
@@ -789,7 +1014,7 @@
         deliveryFeeInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault();
-                saveDeliveryFee();
+                saveDelivery();
             }
         });
         
