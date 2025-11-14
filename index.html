@@ -187,6 +187,12 @@
             border-radius: 8px;
             border-left: 4px solid #ffc107;
         }
+        .delivery-input .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: flex-end;
+        }
         .edit-form {
             display: none;
             margin-top: 10px;
@@ -298,7 +304,10 @@
             <div class="delivery-input" id="delivery-input">
                 <div class="input-group">
                     <label for="delivery-fee">ค่าส่ง (บาท):</label>
-                    <input type="number" id="delivery-fee" min="0" inputmode="numeric" pattern="[0-9]*">
+                    <input type="number" id="delivery-fee" min="0" placeholder="เช่น 20" inputmode="numeric" pattern="[0-9]*">
+                </div>
+                <div class="controls">
+                    <button id="add-delivery" class="success">เพิ่มค่าส่ง</button>
                 </div>
             </div>
             <div class="delivery-section" id="delivery-section">
@@ -344,6 +353,7 @@
         const includeDeliveryCheckbox = document.getElementById('include-delivery');
         const deliveryInput = document.getElementById('delivery-input');
         const deliveryFeeInput = document.getElementById('delivery-fee');
+        const addDeliveryBtn = document.getElementById('add-delivery');
         const deliverySection = document.getElementById('delivery-section');
         const calculateBtn = document.getElementById('calculate');
         const resultDiv = document.getElementById('result');
@@ -741,8 +751,8 @@
             }
         }
 
-        // บันทึกค่าส่ง
-        function saveDeliveryFee() {
+        // เพิ่มค่าส่ง
+        function addDelivery() {
             const fee = parseFloat(deliveryFeeInput.value);
             
             if (isNaN(fee) || fee <= 0) {
@@ -753,6 +763,10 @@
             deliveryFee = fee;
             renderDeliverySection();
             deliveryFeeInput.value = '';
+            
+            // ซ่อนฟอร์มหลังจากเพิ่มสำเร็จ
+            deliveryInput.style.display = 'none';
+            includeDeliveryCheckbox.checked = true;
         }
 
         // แก้ไขค่าส่ง
@@ -959,7 +973,7 @@
         });
         
         clearPeopleBtn.addEventListener('click', () => {
-            if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบคนทั้งหมด?')) {
+            if (confirm('คุณต้องการลบคนทั้งหมด?')) {
                 people = [];
                 foods = [];
                 renderPeopleList();
@@ -984,7 +998,7 @@
         });
         
         clearFoodsBtn.addEventListener('click', () => {
-            if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบอาหารทั้งหมด?')) {
+            if (confirm('คุณต้องการลบอาหารทั้งหมด?')) {
                 foods = [];
                 renderFoodList();
             }
@@ -1003,7 +1017,7 @@
         });
         
         clearDiscountsBtn.addEventListener('click', () => {
-            if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบส่วนลดทั้งหมด?')) {
+            if (confirm('คุณต้องการลบส่วนลดทั้งหมด?')) {
                 discounts = [];
                 renderDiscountList();
             }
@@ -1011,10 +1025,11 @@
         
         // Event listeners สำหรับค่าส่ง
         includeDeliveryCheckbox.addEventListener('change', toggleDelivery);
+        addDeliveryBtn.addEventListener('click', addDelivery);
         deliveryFeeInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault();
-                saveDelivery();
+                addDelivery();
             }
         });
         
