@@ -105,7 +105,7 @@
         .people-list, .food-list, .discount-list, .delivery-section {
             margin-top: 20px;
         }
-        .person-item, .food-item, .discount-item {
+        .person-item, .food-item, .discount-item, .delivery-item {
             display: flex;
             justify-content: space-between;
             padding: 12px 15px;
@@ -116,14 +116,13 @@
             border-left: 4px solid #3498db;
         }
         .food-item {
-            border-left-color: #2ecc71;
+            border-left-color: #3498db;
         }
         .discount-item {
-            border-left-color: #e74c3c;
+            border-left-color: #3498db;
         }
         .delivery-item {
-            background-color: #fff3cd;
-            border-left-color: #ffc107;
+            border-left-color: #3498db;
         }
         .result {
             background: linear-gradient(135deg, #2ecc71, #27ae60);
@@ -185,7 +184,7 @@
             padding: 15px;
             background-color: #f8f9fa;
             border-radius: 8px;
-            border-left: 4px solid #ffc107;
+            border-left: 4px solid #3498db;
         }
         .delivery-input .controls {
             display: flex;
@@ -304,7 +303,7 @@
             <div class="delivery-input" id="delivery-input">
                 <div class="input-group">
                     <label for="delivery-fee">ค่าส่ง (บาท):</label>
-                    <input type="number" id="delivery-fee" min="0" placeholder="เช่น 20" inputmode="numeric" pattern="[0-9]*">
+                    <input type="number" id="delivery-fee" min="0" inputmode="numeric" pattern="[0-9]*">
                 </div>
                 <div class="controls">
                     <button id="add-delivery" class="success">เพิ่มค่าส่ง</button>
@@ -802,12 +801,16 @@
             const deliveryItem = document.createElement('div');
             deliveryItem.className = 'delivery-item';
             deliveryItem.innerHTML = `
+            <div>
                 <span>ค่าส่งทั้งหมด</span>
-                <div>
+                <div class="controls">
                     <span>${deliveryFee.toFixed(2)} บาท</span>
-                    <button class="edit" onclick="editDelivery()" style="margin-left: 10px;">แก้ไข</button>
-                    <button class="remove" onclick="removeDelivery()" style="margin-left: 10px;">ลบ</button>
+                </div>    
+                <div class="controls" style="margin-top: 5px; justify-content: flex-end;">
+                    <button class="edit" onclick="editDelivery()" >แก้ไข</button>
+                    <button class="remove" onclick="removeDelivery()" >ลบ</button>
                 </div>
+            </div>
             `;
             deliverySection.appendChild(deliveryItem);
         }
